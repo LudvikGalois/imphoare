@@ -1,0 +1,61 @@
+name:                imphoare
+version:             0.1.0.0
+synopsis:            Hoare Logic proofs over Imp
+description:         A library for creating and checking Hoare Logic
+                     proofs over a variant of Imp. It uses the Z3
+                     theorem prover to check the validity of
+                     precondition weakening and postcondition
+                     strengthening
+homepage:            https://github.com/ludvikgalois/imphoare#readme
+license:             BSD3
+license-file:        LICENCE
+author:              Robert Offner
+maintainer:          ludvikgalois@gmail.com
+copyright:           2018 Robert Offner
+category:            Data
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+extra-source-files:  src/Language/Imp/Lexer.x
+                     src/Language/Imp/Parser.y
+                     src/Language/CPL/Lexer.x
+                     src/Language/CPL/Parser.y
+
+library
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  default-extensions:  UnicodeSyntax
+                     , OverloadedStrings
+  build-tools:         happy
+                     , alex
+  exposed-modules:     Language.CPL
+                     , Language.CPL.Parser
+                     , Language.Hoare
+                     , Language.Imp
+                     , Language.Imp.Parser
+  other-modules:       Data.Precedence
+                     , Language.CPL.Lexer
+                     , Language.Imp.Lexer
+  build-depends:       base
+                     , base-unicode-symbols
+                     , array
+                     , containers
+                     , prettyprinter
+                     , text
+                     , z3
+  ghc-options:       -Wall -Werror
+
+Test-Suite test-imphoare
+  hs-source-dirs:      test
+  type:                exitcode-stdio-1.0
+  default-language:    Haskell2010
+  default-extensions:  UnicodeSyntax
+                     , OverloadedStrings
+  main-is:             Main.hs
+  other-modules:       ImpSpec
+                     , CPLSpec
+                     , HoareSpec
+  build-depends:       base
+                     , imphoare
+                     , hspec
+                     , QuickCheck
