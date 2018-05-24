@@ -100,7 +100,7 @@ data Prop ν where
 
 instance Pretty UnNumOp where
   pretty Negate = "-"
-  pretty Abs = "abs"  -- Not used
+  pretty Abs    = "abs"  -- Not used
 
 instance Pretty BinNumOp where
   pretty x = case x of

@@ -13,7 +13,7 @@ A module for defining Hoare Logic proofs
 module Language.Hoare
   ( HoareTriple (..), ProofStep (..), ProofValidity (..)
   , StringProofStep, StringProof, LinearProofStep, LinearProof
-  , compileLinearProof, checkProof) where
+  , compileLinearProof, linearTriples, checkProof) where
 
 import qualified Language.CPL              as L
 import           Language.Imp              (ImpType (..))
@@ -173,6 +173,13 @@ compileLinearProof proof
       Sequence lineNum1 lineNum2 → Sequence (fetch lineNum1) (fetch lineNum2)
       If prop lineNum1 lineNum2 → If prop (fetch lineNum1) (fetch lineNum2)
       While prop lineNum → While prop (fetch lineNum)
+
+-- | Get the Hoare Triples of a `LinearProof`
+linearTriples
+  ∷ LinearProof -- ^ The input proof
+  → Either String [HoareTriple String] -- ^ Either the triples of the proof,
+                                       --   or an error message
+linearTriples = (map proofToTriple <$>) . compileLinearProof
 
 -- Our default proof time
 proofTime ∷ Int
