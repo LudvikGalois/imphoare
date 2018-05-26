@@ -10,7 +10,7 @@ Maintainer  : ludvikgalois@gmail.com
 This module defines a parser for the Imp language
 -} 
 
-module Language.Imp.Parser (imp, intExpr) where
+module Language.Imp.Parser (imp, intExpr, boolExpr) where
 
 import qualified Language.Imp.Lexer as T
 import Language.Imp
