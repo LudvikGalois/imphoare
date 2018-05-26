@@ -24,3 +24,6 @@ prove some things, so you'll need to install that separately.
   although it will probably suffer from similar issues as exponentation
   with regards to being unable to disprove a statement.
 - It's not particularly well tested, and the test suite is a WIP
+- It can be a bit finnicky around if statements - try and have the
+  conditional as the rightmost thing in the hoare triple, otherwise
+  it may not successfully realise that two expressions are the same.

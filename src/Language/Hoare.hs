@@ -102,10 +102,10 @@ propBool expr = case expr of
 
 removeProp ∷ (Eq ν) ⇒ L.Prop ν → L.Prop ν → L.Prop ν
 removeProp expr (L.BinProp L.And p q)
-  | expr == p && expr == q = L.TT
   | expr == q = p
   | expr == p = q
-  | otherwise = L.BinProp L.And (removeProp expr p) (removeProp expr q)
+  | q' ← removeProp expr q, q /= q' = L.BinProp L.And p q'
+  | otherwise = L.BinProp L.And (removeProp expr p) q
 removeProp expr prop
   | expr == prop = L.TT
   | otherwise = prop
