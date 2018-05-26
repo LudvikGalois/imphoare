@@ -1,4 +1,5 @@
 {
+{-# Language DataKinds #-}
 {-|
 Module      : Language.Imp.Parser
 Description : A parser for the Imp language
@@ -9,13 +10,15 @@ Maintainer  : ludvikgalois@gmail.com
 This module defines a parser for the Imp language
 -} 
 
-module Language.Imp.Parser (imp) where
+module Language.Imp.Parser (imp, intExpr) where
 
 import qualified Language.Imp.Lexer as T
 import Language.Imp
 }
 
-%name impParser
+%name impParser Stmt
+%name impIntParser IntExpr
+%name impBoolParser BoolExpr
 %monad {Either String} {(>>=)} {return}
 %tokentype { ((Int,Int), T.Token) }
 %error { parseError }
@@ -105,5 +108,11 @@ parseError (((line, col),_):xs) =
 -- | A parser for Imp
 imp :: String -> Either String (Statement String)
 imp = impParser . T.lexer
+
+intExpr :: String -> Either String (Expr ℤ String)
+intExpr = impIntParser . T.lexer
+
+boolExpr :: String -> Either String (Expr 𝔹 String)
+boolExpr = impBoolParser . T.lexer
 
 }
