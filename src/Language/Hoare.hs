@@ -13,7 +13,8 @@ A module for defining Hoare Logic proofs
 module Language.Hoare
   ( HoareTriple (..), ProofStep (..), ProofValidity (..)
   , StringProofStep, StringProof, LinearProofStep, LinearProof
-  , compileLinearProof, linearTriples, checkProof) where
+  , compileLinearProof, linearTriples, checkProof
+  , cumulativeProofValidity) where
 
 import qualified Language.CPL              as L
 import           Language.Imp              (ImpType (..))
@@ -231,6 +232,21 @@ checkProof = go Valid []
             go (min validity stepValidity) (proofToTriple x : proven) xs
           known = (`elem` proven)
       in if all known (containedTriples x) then continue else return NotValid
+
+-- | Return the cumulative proof validity
+cumulativeProofValidity ∷ StringProof → IO [ProofValidity]
+cumulativeProofValidity = go Valid []
+  where
+    go NotValid _ xs = return $ map (const NotValid) xs
+    go _ _ [] = return []
+    go validity proven (x:xs) =
+      let continue = do
+            stepValidity ← validProofStep x
+            let newValidity = min validity stepValidity
+            (newValidity:) <$> go newValidity (proofToTriple x : proven) xs
+          known = (`elem` proven)
+      in if all known (containedTriples x) then continue
+         else (NotValid:) <$> go NotValid [] xs
 
 instance (Show ν, Pretty ν) ⇒ Pretty (HoareTriple ν) where
   pretty (Hoare precon code postcon) = vsep [ braces (pretty precon)
