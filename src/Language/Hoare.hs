@@ -207,27 +207,40 @@ validProofStep step = case step of
   Sequence e1 e2
     | _postcon e1 == _precon e2 → return Valid
     | _precon e1 == _postcon e2 →
-      return $ NotValid $ "The post condition of the first statement doesn't "
-        ++ "match the pre condition of the second statement (try swapping"
-        ++ " the order)"
+      return $ NotValid $ "The postcondition of the first statement ("
+        ++ show (_postcon e1) ++ ")doesn't "
+        ++ "match the precondition (" ++ show (_precon e2) ++ ") of the "
+        ++ "second statement (try swapping the order)"
     | otherwise →
-      return $ NotValid $ "The post condition of the first statement doesn't "
-        ++ "match the pre condition of the second statement"
+      return $ NotValid $ "The postcondition of the first statement ("
+        ++ show (_postcon e1) ++ ")doesn't "
+        ++ "match the precondition (" ++ show (_precon e2) ++ ") of the "
+        ++ "second statement"
   If p e1 e2 → return $
     case _postcon e1 == _postcon e2 of
-      False → NotValid "The postconditions don't match"
-      True → case (_precon e1 `has` p', _precon e1 `has` p') of
+      False →
+        NotValid $ "The postconditions (" ++ show (_postcon e1) ++ ") and ("
+          ++ show (_postcon e2) ++ ") don't match"
+      True → case (_precon e1 `has` p', _precon e2 `has` (L.Not p')) of
         (False,_) →
-          NotValid "The \"True\" case doesn't contain the if predicate"
+          NotValid $ "For the \"True \" case, we can't find " ++ show p'
+            ++ " in " ++ show (_precon e1) ++ ". If it looks like it's"
+            ++ " there, make sure it's on the outside and not part of"
+            ++ " an Or"
         (_,False) →
-          NotValid "The \"False\" case doesn't contain the if predicate"
+          NotValid $ "For the \"False \" case, we can't find "
+            ++ show (L.Not p') ++ " in " ++ show (_precon e2)
+            ++ ". If it looks like it's"
+            ++ " there, make sure it's on the outside and not part of"
+            ++ " an Or"
         _ → Valid
     where p' = propBool p
   While p e1 → return $ 
     case _precon e1 `has` p' of
         True → case removeProp p' (_precon e1) == _postcon e1 of
           True → Valid
-          False → NotValid "The precondition and postcondition don't match"
+          False → NotValid $ "The precondition (" ++ show (_precon e1)
+            ++ ") and postcondition (" ++ show (_postcon e1) ++ ") don't match"
         False → 
           NotValid $ "The precondition doesn't contain" ++ show (pretty p)
     where p' = propBool p
