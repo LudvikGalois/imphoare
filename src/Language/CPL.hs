@@ -189,11 +189,11 @@ simplify prop = case prop of
   -- Recurse on BinProp
   BinProp x e1 e2 → BinProp x (simplify e1) (simplify e2)
   -- Rewrite Gt to Lt
-  old@(Comparison Gt e1 e2) → BinProp And old $ simplify $ Comparison Lt e2 e1
+  Comparison Gt e1 e2 → simplify $ Comparison Lt e2 e1
   -- Rewrite Ge to Le
-  old@(Comparison Ge e1 e2) → BinProp And old $ simplify $ Comparison Le e2 e1
+  Comparison Ge e1 e2 → simplify $ Comparison Le e2 e1
   -- Rewrite Le to Lt
-  old@(Comparison Le e1 e2) → BinProp And old $ simplify
+  Comparison Le e1 e2 → simplify
     $ Comparison Lt e1 (BinNumOp Add (Lit 1) e2)
   -- Rewrite Neq to Not Eq
   Comparison Neq e1 e2 → simplify $ Not (Comparison Eq e1 e2)
@@ -326,6 +326,7 @@ containsPow p = case p of
 addConstraints ∷ (Z3.MonadZ3 z3) ⇒ Prop String → z3 ()
 addConstraints prop = do
   syms ← addVars (getVars prop)
+  makeLtRule
   pow ← makePow (containsPow prop)
   buildAST syms pow (simplify prop) >>= Z3.mkNot >>= Z3.assert
 
@@ -408,6 +409,23 @@ getVars = S.toList . go S.empty
       UnNumOp _ e'     → getNumVars set e'
       BinNumOp _ e1 e2 → getNumVars (getNumVars set e1) e2
       _                → set
+
+-- x < y + 1 ∧ ~(x < y) ⇒ x=y
+makeLtRule ∷ Z3.MonadZ3 z3 ⇒ z3 ()
+makeLtRule = do
+  iSort ← Z3.mkIntSort
+  x ← Z3.mkIntSymbol (1 ∷ Int)
+  y ← Z3.mkIntSymbol (2 ∷ Int)
+  xInt ← Z3.mkBound 0 iSort
+  yInt ← Z3.mkBound 1 iSort
+  xEQy ← Z3.mkEq xInt yInt
+  one ← Z3.mkInteger 1
+  y' ← Z3.mkAdd [yInt, one]
+  xLty' ← Z3.mkLt xInt y'
+  xLty ← Z3.mkLt xInt yInt
+  notxLty ← Z3.mkNot xLty
+  comp ← Z3.mkAnd [xLty', notxLty]
+  Z3.mkIff xEQy comp >>= Z3.mkForall [] [x,y] [iSort, iSort] >>= Z3.assert 
 
 -- Oh boy...
 makePow ∷ (Z3.MonadZ3 z3) ⇒ Bool → z3 Z3.FuncDecl
