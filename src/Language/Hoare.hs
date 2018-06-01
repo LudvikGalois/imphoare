@@ -214,8 +214,10 @@ validProofStep step = case step of
       _precon e1 `has` p',
       _precon e2 `has` L.Not p' → return Valid
     | otherwise → return NotValid
-  While _ e1
-    | _precon e1 == _postcon e1 → return Valid
+  While p e1
+    | p' ← propBool p,
+      _precon e1 `has` p',
+      (removeProp p' (_precon e1)) == _postcon e1 → return Valid
     | otherwise → return NotValid
 
 -- | Check if a proof is valid
