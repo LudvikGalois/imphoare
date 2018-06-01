@@ -266,7 +266,7 @@ validProofStep step = case step of
           False → NotValid $ "The precondition (" ++ pp (_precon e1)
             ++ ") and postcondition (" ++ pp (_postcon e1) ++ ") don't match."
         False → 
-          NotValid $ "The precondition doesn't contain" ++ pp p'
+          NotValid $ "The precondition doesn't contain (" ++ pp p' ++ ")"
             ++ "."
     where p' = propBool p
 

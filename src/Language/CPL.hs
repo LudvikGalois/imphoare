@@ -189,13 +189,13 @@ simplify prop = case prop of
   -- Recurse on BinProp
   BinProp x e1 e2 → BinProp x (simplify e1) (simplify e2)
   -- Rewrite Gt to Lt
-  Comparison Gt e1 e2 → simplify $ Comparison Lt e2 e1
+--  Comparison Gt e1 e2 → simplify $ Comparison Lt e2 e1
   -- Rewrite Ge to Le
-  Comparison Ge e1 e2 → simplify $ Comparison Le e2 e1
+--  Comparison Ge e1 e2 → simplify $ Comparison Le e2 e1
   -- Rewrite Le to Lt
-  Comparison Le e1 e2 → simplify $ Comparison Lt e1 (BinNumOp Add (Lit 1) e2)
+--  Comparison Le e1 e2 → simplify $ Comparison Lt e1 (BinNumOp Add (Lit 1) e2)
   -- Rewrite Neq to Not Eq
-  Comparison Neq e1 e2 → simplify $ Not (Comparison Eq e1 e2)
+--  Comparison Neq e1 e2 → simplify $ Not (Comparison Eq e1 e2)
   -- Recurse on comparison
   Comparison x eNum1 eNum2 → Comparison x (simplifyNum eNum1)
                                           (simplifyNum eNum2)
@@ -350,6 +350,18 @@ buildAST vars pow prop = case prop of
     e1AST ← buildNumAST vars pow e1
     e2AST ← buildNumAST vars pow e2
     Z3.mkLt e1AST e2AST
+  Comparison Le e1 e2 → do
+    e1AST ← buildNumAST vars pow e1
+    e2AST ← buildNumAST vars pow e2
+    Z3.mkLe e1AST e2AST
+  Comparison Gt e1 e2 → do
+    e1AST ← buildNumAST vars pow e1
+    e2AST ← buildNumAST vars pow e2
+    Z3.mkGt e1AST e2AST
+  Comparison Ge e1 e2 → do
+    e1AST ← buildNumAST vars pow e1
+    e2AST ← buildNumAST vars pow e2
+    Z3.mkGe e1AST e2AST
   Comparison Eq e1 e2 → do
     e1AST ← buildNumAST vars pow e1
     e2AST ← buildNumAST vars pow e2
