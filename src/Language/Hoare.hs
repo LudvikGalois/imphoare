@@ -131,7 +131,7 @@ proofToTriple proof = case proof of
                      , _code = I.If p (_code t1) (_code t2)
                      , _postcon = _postcon t1
                      }
-  While p t1 → Hoare { _precon = L.BinProp L.And (_postcon t1) (propBool p)
+  While p t1 → Hoare { _precon = _postcon t1
                      , _code = I.While p (_code t1)
                      , _postcon = L.BinProp L.And (_postcon t1)
                                                   (L.Not (propBool p))
