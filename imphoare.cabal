@@ -1,5 +1,5 @@
 name:                imphoare
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            Hoare Logic proofs over Imp
 description:         A library for creating and checking Hoare Logic
                      proofs over a variant of Imp. It uses the Z3

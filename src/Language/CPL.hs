@@ -140,8 +140,8 @@ instance (Pretty ν, Show ν) ⇒ Pretty (NumExpr ν) where
               bracketFun = if prec' < prec then parens else id
           in align $ bracketFun $ case assoc of
             None → go (prec' + 1) expr1 <+> pretty op <+> go (prec' + 1) expr2
-            L →  go prec' expr1 <+> pretty op <+> go (prec' + 1) expr2
-            R →  go (prec' + 1) expr1 <+> pretty op <+> go prec' expr2
+            L → go prec' expr1 <+> pretty op <+> go (prec' + 1) expr2
+            R → go (prec' + 1) expr1 <+> pretty op <+> go prec' expr2
 
 instance (Pretty ν, Show ν) ⇒ Pretty (Prop ν) where
   pretty = go 0

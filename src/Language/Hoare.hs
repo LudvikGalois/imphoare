@@ -139,14 +139,14 @@ proofToTriple proof = case proof of
 
 -- | A type for proof validity
 data ProofValidity
-  = NotValid -- ^ The proof is not valid
+  = NotValid String -- ^ The proof is not valid, and a reason why
   | Unknown -- ^ We can't decide if the proof is valid or not
   | Valid -- ^ The proof is valid
   deriving (Eq, Show, Ord)
 
 -- | A proof step with Hoare triples (with string variables) for previous steps
 type StringProofStep = ProofStep (HoareTriple String) String
--- | A proof step with line numbers for previous steps
+-- | A proof step with line numbers for previous steps and string variables
 type LinearProofStep = ProofStep Int String
 -- | A proof built from `StringProofStep`
 type StringProof = [StringProofStep]
@@ -193,7 +193,7 @@ checkProp prop = do
   valid ← L.prove proofTime prop
   return $ case valid of
       Nothing    → Unknown
-      Just False → NotValid
+      Just False → NotValid "Unable to prove proposition"
       Just True  → Valid
 
 -- Is an individual proof step valid?
@@ -206,38 +206,52 @@ validProofStep step = case step of
     checkProp (L.BinProp L.Imp oldcon newcon)
   Sequence e1 e2
     | _postcon e1 == _precon e2 → return Valid
-    | otherwise → return NotValid
-  If p e1 e2
-    | _postcon e1 == _postcon e2,
-      p' ← propBool p,
-      removeProp p' (_precon e1) == removeProp (L.Not p') (_precon e2),
-      _precon e1 `has` p',
-      _precon e2 `has` L.Not p' → return Valid
-    | otherwise → return NotValid
-  While p e1
-    | p' ← propBool p,
-      _precon e1 `has` p',
-      (removeProp p' (_precon e1)) == _postcon e1 → return Valid
-    | otherwise → return NotValid
+    | _precon e1 == _postcon e2 →
+      return $ NotValid $ "The post condition of the first statement doesn't "
+        ++ "match the pre condition of the second statement (try swapping"
+        ++ " the order)"
+    | otherwise →
+      return $ NotValid $ "The post condition of the first statement doesn't "
+        ++ "match the pre condition of the second statement"
+  If p e1 e2 → return $
+    case _postcon e1 == _postcon e2 of
+      False → NotValid "The postconditions don't match"
+      True → case (_precon e1 `has` p', _precon e1 `has` p') of
+        (False,_) →
+          NotValid "The \"True\" case doesn't contain the if predicate"
+        (_,False) →
+          NotValid "The \"False\" case doesn't contain the if predicate"
+        _ → Valid
+    where p' = propBool p
+  While p e1 → return $ 
+    case _precon e1 `has` p' of
+        True → case removeProp p' (_precon e1) == _postcon e1 of
+          True → Valid
+          False → NotValid "The precondition and postcondition don't match"
+        False → 
+          NotValid $ "The precondition doesn't contain" ++ show (pretty p)
+    where p' = propBool p
 
 -- | Check if a proof is valid
 checkProof ∷ StringProof → IO ProofValidity
 checkProof = go Valid []
   where
-    go NotValid _ _ = return NotValid
+    go (NotValid reason) _ _ = return $ NotValid reason
     go validity _ [] = return validity
     go validity proven (x:xs) =
       let continue = do
             stepValidity ← validProofStep x
             go (min validity stepValidity) (proofToTriple x : proven) xs
           known = (`elem` proven)
-      in if all known (containedTriples x) then continue else return NotValid
+      in if all known (containedTriples x)
+         then continue else return (NotValid "Unknown step")
 
 -- | Return the cumulative proof validity
 cumulativeProofValidity ∷ StringProof → IO [ProofValidity]
 cumulativeProofValidity = go Valid []
   where
-    go NotValid _ xs = return $ map (const NotValid) xs
+    go (NotValid _) _ xs = return $
+      map (const (NotValid "Earlier step invalid")) xs
     go _ _ [] = return []
     go validity proven (x:xs) =
       let continue = do
@@ -246,7 +260,8 @@ cumulativeProofValidity = go Valid []
             (newValidity:) <$> go newValidity (proofToTriple x : proven) xs
           known = (`elem` proven)
       in if all known (containedTriples x) then continue
-         else (NotValid:) <$> go NotValid [] xs
+         else (NotValid "Unknown step":) <$>
+              go (NotValid "Earlier step invalid") [] xs
 
 instance (Show ν, Pretty ν) ⇒ Pretty (HoareTriple ν) where
   pretty (Hoare precon code postcon) = vsep [ braces (pretty precon)
