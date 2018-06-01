@@ -221,12 +221,12 @@ validProofStep step = case step of
     | _postcon e1 == _precon e2 → return Valid
     | _precon e1 == _postcon e2 →
       return $ NotValid $ "The postcondition of the first statement ("
-        ++ pp (_postcon e1) ++ ")doesn't "
+        ++ pp (_postcon e1) ++ ") doesn't "
         ++ "match the precondition (" ++ pp (_precon e2) ++ ") of the "
         ++ "second statement (try swapping the order)."
     | otherwise →
       return $ NotValid $ "The postcondition of the first statement ("
-        ++ pp (_postcon e1) ++ ")doesn't "
+        ++ pp (_postcon e1) ++ ") doesn't "
         ++ "match the precondition (" ++ pp (_precon e2) ++ ") of the "
         ++ "second statement."
   If p e1 e2 → return $
@@ -249,7 +249,7 @@ validProofStep step = case step of
         _ → case removeProp p' (_precon e1) ==
                   removeProp (L.Not p') (_precon e2) of
               False →
-                NotValid $ "I tried removing to \"if condition\" from"
+                NotValid $ "I tried removing the \"if condition\" from"
                   ++ " both preconditions, but they didn't match. I"
                   ++ " got (" ++ pp (removeProp p' (_precon e1))
                   ++ ") and (" ++ pp (removeProp (L.Not p') (_precon e2))

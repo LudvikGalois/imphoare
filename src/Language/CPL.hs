@@ -410,6 +410,7 @@ getVars = S.toList . go S.empty
       BinNumOp _ e1 e2 → getNumVars (getNumVars set e1) e2
       _                → set
 
+-- We need this for when things become non-linear and Z3 swaps solver
 -- x < y + 1 ∧ ~(x < y) ⇒ x=y
 makeLtRule ∷ Z3.MonadZ3 z3 ⇒ z3 ()
 makeLtRule = do
