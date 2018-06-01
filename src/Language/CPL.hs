@@ -189,13 +189,14 @@ simplify prop = case prop of
   -- Recurse on BinProp
   BinProp x e1 e2 → BinProp x (simplify e1) (simplify e2)
   -- Rewrite Gt to Lt
---  Comparison Gt e1 e2 → simplify $ Comparison Lt e2 e1
+  old@(Comparison Gt e1 e2) → BinProp And old $ simplify $ Comparison Lt e2 e1
   -- Rewrite Ge to Le
---  Comparison Ge e1 e2 → simplify $ Comparison Le e2 e1
+  old@(Comparison Ge e1 e2) → BinProp And old $ simplify $ Comparison Le e2 e1
   -- Rewrite Le to Lt
---  Comparison Le e1 e2 → simplify $ Comparison Lt e1 (BinNumOp Add (Lit 1) e2)
+  old@(Comparison Le e1 e2) → BinProp And old $ simplify
+    $ Comparison Lt e1 (BinNumOp Add (Lit 1) e2)
   -- Rewrite Neq to Not Eq
---  Comparison Neq e1 e2 → simplify $ Not (Comparison Eq e1 e2)
+  Comparison Neq e1 e2 → simplify $ Not (Comparison Eq e1 e2)
   -- Recurse on comparison
   Comparison x eNum1 eNum2 → Comparison x (simplifyNum eNum1)
                                           (simplifyNum eNum2)
