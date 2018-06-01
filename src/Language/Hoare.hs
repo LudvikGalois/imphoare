@@ -193,7 +193,7 @@ checkProp prop = do
   valid ← L.prove proofTime prop
   return $ case valid of
       Nothing    → Unknown
-      Just False → NotValid "Unable to prove proposition"
+      Just False → NotValid "Proposition is false."
       Just True  → Valid
 
 -- Is an individual proof step valid?
@@ -210,12 +210,12 @@ validProofStep step = case step of
       return $ NotValid $ "The postcondition of the first statement ("
         ++ show (_postcon e1) ++ ")doesn't "
         ++ "match the precondition (" ++ show (_precon e2) ++ ") of the "
-        ++ "second statement (try swapping the order)"
+        ++ "second statement (try swapping the order)."
     | otherwise →
       return $ NotValid $ "The postcondition of the first statement ("
         ++ show (_postcon e1) ++ ")doesn't "
         ++ "match the precondition (" ++ show (_precon e2) ++ ") of the "
-        ++ "second statement"
+        ++ "second statement."
   If p e1 e2 → return $
     case _postcon e1 == _postcon e2 of
       False →
@@ -226,23 +226,35 @@ validProofStep step = case step of
           NotValid $ "For the \"True \" case, we can't find " ++ show p'
             ++ " in " ++ show (_precon e1) ++ ". If it looks like it's"
             ++ " there, make sure it's on the outside and not part of"
-            ++ " an Or"
+            ++ " an Or."
         (_,False) →
           NotValid $ "For the \"False \" case, we can't find "
             ++ show (L.Not p') ++ " in " ++ show (_precon e2)
             ++ ". If it looks like it's"
             ++ " there, make sure it's on the outside and not part of"
-            ++ " an Or"
-        _ → Valid
+            ++ " an Or."
+        _ → case removeProp p' (_precon e1) ==
+                  removeProp (L.Not p') (_precon e2) of
+              False →
+                NotValid $ "I tried removing to \"if condition\" from"
+                  ++ " both preconditions, but they didn't match. I"
+                  ++ " got (" ++ show (removeProp p' (_precon e1))
+                  ++ ") and (" ++ show (removeProp (L.Not p') (_precon e2))
+                  ++ "). If these are actually the same, but just"
+                  ++ " specify terms in a different order, use"
+                  ++ " precondition weakening to put them in the same"
+                  ++ " order."
+              True → Valid
     where p' = propBool p
   While p e1 → return $ 
     case _precon e1 `has` p' of
         True → case removeProp p' (_precon e1) == _postcon e1 of
           True → Valid
           False → NotValid $ "The precondition (" ++ show (_precon e1)
-            ++ ") and postcondition (" ++ show (_postcon e1) ++ ") don't match"
+            ++ ") and postcondition (" ++ show (_postcon e1) ++ ") don't match."
         False → 
           NotValid $ "The precondition doesn't contain" ++ show (pretty p)
+            ++ "."
     where p' = propBool p
 
 -- | Check if a proof is valid
