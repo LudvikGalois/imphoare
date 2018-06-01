@@ -200,10 +200,20 @@ checkProp prop = do
 validProofStep ∷ StringProofStep → IO ProofValidity
 validProofStep step = case step of
   Assign{} → return Valid
-  PreconWeaken newcon Hoare{_precon = oldcon} →
-    checkProp (L.BinProp L.Imp newcon oldcon)
-  PostconStrengthen newcon Hoare{_postcon = oldcon} →
-    checkProp (L.BinProp L.Imp oldcon newcon)
+  PreconWeaken newcon Hoare{_precon = oldcon} → do
+    res ← checkProp (L.BinProp L.Imp newcon oldcon)
+    return $ case res of
+      NotValid _ → NotValid $
+        "(" ++ show newcon ++ ") does not imply ("
+        ++ show oldcon ++")."
+      _ → res
+  PostconStrengthen newcon Hoare{_postcon = oldcon} → do
+    res ← checkProp (L.BinProp L.Imp oldcon newcon)
+    return $ case res of
+      NotValid _ → NotValid $
+        "(" ++ show oldcon ++ ") does not imply ("
+        ++ show newcon ++")."
+      _ → res
   Sequence e1 e2
     | _postcon e1 == _precon e2 → return Valid
     | _precon e1 == _postcon e2 →
