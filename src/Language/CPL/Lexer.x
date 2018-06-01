@@ -24,6 +24,7 @@ tokens :-
   "-" {\pos _ -> (getLineCol pos, Sub)}
   "*" {\pos _ -> (getLineCol pos, Mult)}
   "/" {\pos _ -> (getLineCol pos, Div)}
+  "%" {\pos _ -> (getLineCol pos, Mod)}
   "^" {\pos _ -> (getLineCol pos, Pow)}
   "=/=" {\pos _ -> (getLineCol pos, Neq)}
   "=>" {\pos _ -> (getLineCol pos, Imp)}
