@@ -196,6 +196,9 @@ checkProp prop = do
       Just False → NotValid "Proposition is false."
       Just True  → Valid
 
+pp ∷ Pretty α ⇒ α  → String
+pp = show . pretty
+
 -- Is an individual proof step valid?
 validProofStep ∷ StringProofStep → IO ProofValidity
 validProofStep step = case step of
@@ -204,42 +207,42 @@ validProofStep step = case step of
     res ← checkProp (L.BinProp L.Imp newcon oldcon)
     return $ case res of
       NotValid _ → NotValid $
-        "(" ++ show newcon ++ ") does not imply ("
-        ++ show oldcon ++")."
+        "(" ++ pp newcon ++ ") does not imply ("
+        ++ pp oldcon ++")."
       _ → res
   PostconStrengthen newcon Hoare{_postcon = oldcon} → do
     res ← checkProp (L.BinProp L.Imp oldcon newcon)
     return $ case res of
       NotValid _ → NotValid $
-        "(" ++ show oldcon ++ ") does not imply ("
-        ++ show newcon ++")."
+        "(" ++ pp oldcon ++ ") does not imply ("
+        ++ pp newcon ++")."
       _ → res
   Sequence e1 e2
     | _postcon e1 == _precon e2 → return Valid
     | _precon e1 == _postcon e2 →
       return $ NotValid $ "The postcondition of the first statement ("
-        ++ show (_postcon e1) ++ ")doesn't "
-        ++ "match the precondition (" ++ show (_precon e2) ++ ") of the "
+        ++ pp (_postcon e1) ++ ")doesn't "
+        ++ "match the precondition (" ++ pp (_precon e2) ++ ") of the "
         ++ "second statement (try swapping the order)."
     | otherwise →
       return $ NotValid $ "The postcondition of the first statement ("
-        ++ show (_postcon e1) ++ ")doesn't "
-        ++ "match the precondition (" ++ show (_precon e2) ++ ") of the "
+        ++ pp (_postcon e1) ++ ")doesn't "
+        ++ "match the precondition (" ++ pp (_precon e2) ++ ") of the "
         ++ "second statement."
   If p e1 e2 → return $
     case _postcon e1 == _postcon e2 of
       False →
-        NotValid $ "The postconditions (" ++ show (_postcon e1) ++ ") and ("
-          ++ show (_postcon e2) ++ ") don't match"
+        NotValid $ "The postconditions (" ++ pp (_postcon e1) ++ ") and ("
+          ++ pp (_postcon e2) ++ ") don't match"
       True → case (_precon e1 `has` p', _precon e2 `has` (L.Not p')) of
         (False,_) →
-          NotValid $ "For the \"True \" case, we can't find " ++ show p'
-            ++ " in " ++ show (_precon e1) ++ ". If it looks like it's"
+          NotValid $ "For the \"True \" case, we can't find " ++ pp p'
+            ++ " in " ++ pp (_precon e1) ++ ". If it looks like it's"
             ++ " there, make sure it's on the outside and not part of"
             ++ " an Or."
         (_,False) →
           NotValid $ "For the \"False \" case, we can't find "
-            ++ show (L.Not p') ++ " in " ++ show (_precon e2)
+            ++ pp (L.Not p') ++ " in " ++ pp (_precon e2)
             ++ ". If it looks like it's"
             ++ " there, make sure it's on the outside and not part of"
             ++ " an Or."
@@ -248,8 +251,8 @@ validProofStep step = case step of
               False →
                 NotValid $ "I tried removing to \"if condition\" from"
                   ++ " both preconditions, but they didn't match. I"
-                  ++ " got (" ++ show (removeProp p' (_precon e1))
-                  ++ ") and (" ++ show (removeProp (L.Not p') (_precon e2))
+                  ++ " got (" ++ pp (removeProp p' (_precon e1))
+                  ++ ") and (" ++ pp (removeProp (L.Not p') (_precon e2))
                   ++ "). If these are actually the same, but just"
                   ++ " specify terms in a different order, use"
                   ++ " precondition weakening to put them in the same"
@@ -260,10 +263,10 @@ validProofStep step = case step of
     case _precon e1 `has` p' of
         True → case removeProp p' (_precon e1) == _postcon e1 of
           True → Valid
-          False → NotValid $ "The precondition (" ++ show (_precon e1)
-            ++ ") and postcondition (" ++ show (_postcon e1) ++ ") don't match."
+          False → NotValid $ "The precondition (" ++ pp (_precon e1)
+            ++ ") and postcondition (" ++ pp (_postcon e1) ++ ") don't match."
         False → 
-          NotValid $ "The precondition doesn't contain" ++ show (pretty p)
+          NotValid $ "The precondition doesn't contain" ++ pp p'
             ++ "."
     where p' = propBool p
 
